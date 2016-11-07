@@ -6,6 +6,17 @@
                         apaitei diorthwseis kai arketes prosthhkes gia na leitourghsei swsta!
  */
 
+/*
+ * 
+ * 
+ *      PROSOXH! gia na leitourgisei swsta, prepei to arxeio eisodou (input.txt)
+ *      na xrisimopoiei linux/osx EOL format.
+ *      Dhladh, h kathe gramh na teleiwnei me "\n", kai oxi me "\r\n".
+ * 
+ * 
+ * 
+ */
+
 #include <stdio.h>
 
 enum State {
@@ -49,16 +60,16 @@ int main(int argc, char** argv) {
            mporouse na arxizei apo ton xarakthra ch pou diabasthke kai akolouthws na
            klhthei h synarthsh pou sarwnei xarakthra-xarakthra thn phgaia symvoloseira
            kai pragmatopoiei thn anagnwrish */
-        if (ch >= '0' && ch <= '9' || ch == '.') {
+        if (ch >= '0' && ch <= '9' || ch == '.') { // periptosh pou diavazei arithmo h '.' ( ola ta arithmitika kiriolektika mazi )
             token1();
             continue;
-        } else if (ch == '#') {
+        } else if (ch == '#') { // priptosh pou diavazei '#' ( sxolia )
             token2();
             continue;
-        } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_') {
+        } else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_') { // anagnoristika
             token3();
             continue;
-        } else if (ch == '\'' || ch == '\"') {
+        } else if (ch == '\'' || ch == '\"') { // simvolosires
             token4();
             continue;
         } else {
@@ -105,10 +116,8 @@ void avoidchars() {
     }
 }
 
-// Deigma synarthshs pou anagnwrizei kapoio sygkekrimeno anagnwristiko
-
 void token1() {
-    dbg("Trying to indentify token1\n");
+    dbg("Trying to indentify token1 (number)\n");
     State currentState = S0;
     State prevState;
     while (1) {
@@ -128,8 +137,7 @@ void token1() {
                     currentState = S4;
                     prevState = S0;
                     break;
-                }// loipoi xarakthres
-                else {
+                } else {
                     currentState = BAD;
                     prevState = S0;
                     break;
@@ -367,7 +375,7 @@ void token1() {
                     break;
                 }
             }
-            case INT:
+            case INT: // telika, o arithmos htan akeraios
             {
                 dbg("  FOUND  INTEGER\n");
                 currentState = GOOD;
@@ -375,23 +383,23 @@ void token1() {
                 fprintf(fo, "Type: INTEGER\t Num of chars: %d \n", counter - 1);
                 break;
             }
-            case FLOAT:
+            case FLOAT: // telika, o arithmos htan kinhths ypodistolhs
             {
                 dbg("  FOUND  FLOAT\n");
                 currentState = GOOD;
-                prevState = INT;
+                prevState = FLOAT;
                 fprintf(fo, "Type: FLOAT\t Num of chars: %d \n", counter - 1);
                 break;
             }
-            case IMAGINARY:
+            case IMAGINARY: // telika, o arithmos htan fantastikos
             {
                 dbg("  FOUND  IMAGINARY\n");
                 currentState = GOOD;
-                prevState = INT;
+                prevState = FLOAT;
                 fprintf(fo, "Type: IMAGINARY\t Num of chars: %d \n", counter - 1);
                 break;
             }
-            case BAD:
+            case BAD: // telika, yphrkse kapoio sfalma sthn anagnwrish tou arithmou
             {
                 dbg("  BAD\n");
                 prevState = BAD;
@@ -410,7 +418,7 @@ void token1() {
 }
 
 void token2() {
-    dbg("Trying to indentify token2\n");
+    dbg("Trying to indentify token2 (comment)\n");
     State currentState = S0;
     State prevState;
     while (1) {
@@ -422,27 +430,18 @@ void token2() {
                     currentState = S0;
                     prevState = S0;
                     break;
-                }// loipoi xarakthres
-                else {
+                } else {
                     currentState = FOUND;
                     prevState = S0;
                     break;
                 }
             }
-            case FOUND:
+            case FOUND: // to comment anagnwristike epityxws (den yparxei periptosh na apotyxei)
             {
                 dbg("  FOUND  COMMENT\n");
                 currentState = GOOD;
                 prevState = FOUND;
                 fprintf(fo, "Type: COMMENT\t Num of chars: %d \n", counter - 1);
-                break;
-            }
-            case BAD:
-            {
-                dbg("  BAD\n");
-                prevState = BAD;
-                fprintf(fo, "+Error! Invalid syntax for token2\n");
-                avoidchars();
                 break;
             }
             case GOOD:
@@ -456,7 +455,7 @@ void token2() {
 }
 
 void token3() {
-    dbg("Trying to indentify token3\n");
+    dbg("Trying to indentify token3 (identifier)\n");
     State currentState = S0;
     State prevState;
     while (1) {
@@ -478,7 +477,7 @@ void token3() {
                     break;
                 }
             }
-            case FOUND:
+            case FOUND: // telika anagnwristike to identifier
             {
                 dbg("  FOUND  IDENTIFIER\n");
                 currentState = GOOD;
@@ -486,7 +485,7 @@ void token3() {
                 fprintf(fo, "Type: IDENTIFIER\t Num of chars: %d \n", counter - 1);
                 break;
             }
-            case BAD:
+            case BAD: // yphrkse kapoio sfalma sthn anagnwrish tou identifier
             {
                 dbg("  BAD\n");
                 prevState = BAD;
@@ -504,14 +503,17 @@ void token3() {
     }
 }
 
+
+// afou oi simvoloseires, eite perikleiontai se mona eisagwgika ('), eite se dipla (")
+// den exoun diafora, h anagnwrish tous 8a ginei sthn idia synartish
 void token4() {
-    dbg("Trying to indentify token4\n");
+    dbg("Trying to indentify token4 (string)\n");
     State currentState = S0;
     State prevState;
     while (1) {
         switch (currentState) {
-            case S0:
-            {
+            case S0: 
+			{
                 dbg("  S0");
                 if (ch == '\'') {
                     currentState = S1;
@@ -527,8 +529,7 @@ void token4() {
                     break;
                 }
             }
-
-            case S1:
+            case S1: // prokeite gia symvoloseira pou perikleietai apo mona eisagwgika (')
             {
                 dbg("  S1");
                 if (ch == '\\') {
@@ -550,7 +551,7 @@ void token4() {
                 }
 
             }
-            case S2:
+            case S2: // ama diavastike '\', ginete escape o epomenos xarakthras
             {
                 dbg("  S2");
                 currentState = S1;
@@ -558,7 +559,7 @@ void token4() {
                 break;
             }
 
-            case S3:
+            case S3: // prokeite gia symvoloseira pou perikleietai apo dipla eisagwgika (")
             {
                 dbg("  S3");
                 if (ch == '\\') {
@@ -580,22 +581,22 @@ void token4() {
                 }
 
             }
-            case S4:
+            case S4: // ama diavastike "\", ginete escape o epomenos xarakthras
             {
                 dbg("  S4");
                 currentState = S3;
                 prevState = S4;
                 break;
             }
-            case FOUND:
+            case FOUND: // h simvoloseira anagnwristike epityxws
             {
                 dbg("  FOUND  STRING\n");
                 currentState = GOOD;
                 prevState = FOUND;
-                fprintf(fo, "Type: STRING\t Num of chars: %d \n", counter - 1);
+                fprintf(fo, "Type: STRING\t Num of chars: %d \n", counter - 2);
                 break;
             }
-            case BAD:
+            case BAD: // h simvoloseira den teleiwse pote (den vre8ikan ta eisagwgika pou thn "kleinoun")
             {
                 dbg("  BAD\n");
                 prevState = BAD;
