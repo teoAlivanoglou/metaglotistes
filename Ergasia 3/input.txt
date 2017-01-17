@@ -1,0 +1,5 @@
+x = 2
+1wer
+"ww'
+a = '123'
+del(yoyo)
